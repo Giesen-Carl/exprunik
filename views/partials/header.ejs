@@ -1,0 +1,41 @@
+<div class="header-bar">
+    <div class="header-title">
+        <%= headerTitle %>
+    </div>
+    <!-- Header buttons -->
+    <div class="header-buttons">
+        <% if (locals.config.username) { %>
+            <!-- Cocktails button -->
+            <% if (headerButtons.includes('cocktails-button')) { %>
+                <button class="header-button cocktails-button">
+                    <div>Cocktails</div>
+                </button>
+                <% } %>
+                    <!-- Cocktial erstellen button -->
+                    <% if (headerButtons.includes('cocktail-create-button') && locals.config.role==='ADMIN' ) { %>
+                        <button class="header-button cocktail-create-button">
+                            <div>Cocktail erstellen</div>
+                        </button>
+                        <% } %>
+                            <!-- Bestellungen button -->
+                            <% if (headerButtons.includes('bestellung-button')) { %>
+                                <button class="header-button bestellung-button">
+                                    <div>Bestellungen</div>
+                                </button>
+                                <% } %>
+                                    <!-- Header buttons end -->
+                                    <!-- Login and Logout buttons -->
+                                    <button class="header-button logout-button" redirect="/">
+                                        <div class="username-text">
+                                            <%= locals.config.username %>
+                                        </div>
+                                        <div class="logout-text">logout</div>
+                                    </button>
+                                    <% } else { %>
+                                        <button class="header-button login-button" redirect="/">
+                                            <div>login</div>
+                                        </button>
+                                        <% } %>
+                                            <!-- Login and Logout butons end -->
+    </div>
+</div>

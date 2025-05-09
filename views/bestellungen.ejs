@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Fermantor - Die besten Cocktails in Düren</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <link href="https://fonts.googleapis.com/css?family=Cookie" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+
+</head>
+
+<body>
+    <div class="wrapper">
+        <%- include('partials/header.ejs', { headerTitle: 'Bestellungen' , headerButtons: ['cocktails-button'] } ) %>
+            <div>
+                <table id='bestellungen_table'></table>
+            </div>
+    </div> <!-- End Wrapper -->
+    <!-- partial -->
+    <script src="scripts/scripts.js"></script>
+    <script>
+        function pollData() {
+            fetch('/bestellungen')
+                .then(response => response.json())
+                .then(data => {
+                    const element = document.getElementById('bestellungen_table');
+                    if ("<%= locals.config.role %>" === 'USER') {
+                        const tableHeader = `
+                            <tr>
+                                <th>Time</th>
+                                <th>Cocktail</th>
+                                <th>Status</th>
+                            </tr>
+                        `;
+                        const tableRows = data.reduce((acc, cur) => {
+                            const row = `
+                            <tr>
+                                <td>${cur.time}</td>
+                                <td>${cur.cocktailIdent}</td>
+                                <td>${cur.status}</td>
+                            </tr>
+                        `;
+                            return acc + row;
+                        }, '');
+                        element.innerHTML = `${tableHeader}${tableRows}`;
+                    } else if ("<%= locals.config.role %>" === 'ADMIN') {
+                        const tableHeader = `
+                            <tr>
+                                <th>Time</th>
+                                <th>Username</th>
+                                <th>Cocktail</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        `;
+                        const tableRows = data.reduce((acc, cur) => {
+                            const completeAction = `
+                                <form action="/bestellung/complete/${cur.id}?redirect=/bestellung"
+                                    method="post">
+                                    <button type="submit">
+                                        complete
+                                    </button>
+                                </form>
+                            `;
+                            const deleteAction = `
+                                <form action="/bestellung/delete/${cur.id}?redirect=/bestellung"
+                                    method="post">
+                                    <button type="submit">
+                                        delete
+                                    </button>
+                                </form>
+                            `;
+                            const actions = cur.status === 'IN_PROGRESS' ? completeAction : deleteAction;
+                            const row = `
+                                <tr>
+                                    <td>${cur.time}</td>
+                                    <td>${cur.username}</td>
+                                    <td>${cur.cocktailIdent}</td>
+                                    <td>${cur.status}</td>
+                                    <td>${actions}</td>
+                                </tr>
+                            `;
+                            return acc + row;
+                        }, '');
+                        element.innerHTML = `${tableHeader}${tableRows}`;
+                    }
+                })
+                .catch(error => console.error('Error fetching data:', error));
+        }
+        setInterval(pollData, 2000);
+        window.onload = pollData;
+    </script>
+</body>
+
+</html>

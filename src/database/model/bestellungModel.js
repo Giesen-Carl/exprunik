@@ -1,24 +1,29 @@
 import { DataTypes } from 'sequelize';
 import database from '../database.js';
 
-const User = database.define('User', {
+const Bestellung = database.define('Bestellung', {
     id: {
-        type: DataTypes.STRING,
+        type: DataTypes.INTEGER,
         allowNull: false,
         primaryKey: true,
+        autoIncrement: true,
     },
     username: {
         type: DataTypes.STRING,
         allowNull: false,
     },
-    role: {
+    cocktailIdent: {
         type: DataTypes.STRING,
         allowNull: false,
     },
+    status: {
+        type: DataTypes.STRING,
+        allowNull: false,
+    }
 },
     {
-        tableName: 'User',
-        timestamps: false
+        tableName: 'Bestellung',
+        timestamps: true
     });
 
-export default User;
+export default Bestellung;

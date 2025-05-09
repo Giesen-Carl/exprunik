@@ -8,6 +8,10 @@ import bodyParser from 'body-parser';
 
 // Constants
 const default_redirect = '/';
+export const Role = {
+    ADMIN: 'ADMIN',
+    USER: 'USER',
+}
 
 // Router
 const auth_router = express.Router();
@@ -38,19 +42,21 @@ auth_router.route('/signup')
         res.render('signup.ejs', { redirect: req.redirect_param });
     })
     .post(async (req, res) => {
-        const { username, email, password, confirm_password } = req.body;
+        const { username, password, confirm_password } = req.body;
         try {
-            const token = await signup(username, email, password, confirm_password);
+            const token = await signup(username, password, confirm_password);
             res.cookie('token', token).redirect(req.redirect);
         } catch (error) {
-            const data = { username: username, email: email, password: password, confirm_password: confirm_password, redirect: req.redirect_param, error: error.message }
+            const data = { username: username, password: password, confirm_password: confirm_password, redirect: req.redirect_param, error: error.message }
             res.render('signup.ejs', data);
         }
     });
 
+
 // Logout route
 auth_router.get('/logout', async (req, res) => {
-    res.clearCookie('token').redirect('/login');
+    const redirect = req.redirect;
+    res.clearCookie('token').redirect(redirect ?? '/login');
 });
 
 // Middleware to check if user is authenticated
@@ -69,9 +75,22 @@ export const auth = async (req, res, next) => {
     }
 };
 
+export const authUser = async (req, res, next) => {
+    const token = req.cookies.token;
+    const secret = process.env.PASSWORD_HASH_SECRET;
+    if (token) {
+        try {
+            const id = jwt.verify(token, secret).id;
+            req.user = await User.findByPk(id);
+        } catch (error) {}
+    }
+    next();
+};
+
 // Login function
 async function login(username, password) {
-    const id = await User.findOne({ where: { username: username } }).id;
+    const user = await User.findOne({ where: { username: username } })
+    const id = user?.id;
     if (!id) {
         throw new Error('No Account found with this username');
     }
@@ -83,11 +102,11 @@ async function login(username, password) {
     if (!hashedPassword || expectedPassword.password !== hashedPassword) {
         throw new Error('wrong password entered');
     }
-    return await generateToken(username);
+    return await generateToken(id);
 }
 
 // signup function
-async function signup(username, email, password, confirm_password) {
+async function signup(username, password, confirm_password) {
     if (password !== confirm_password) {
         throw new Error('Passwords do not match');
     }
@@ -97,9 +116,21 @@ async function signup(username, email, password, confirm_password) {
     }
     const hashedPassword = hash(password);
     const id = crypto.randomUUID();
+    const role = Role.USER;
     await Auth.create({ id, password: hashedPassword });
-    await User.create({ id, username, email });
+    await User.create({ id, username, role });
     return await generateToken(id);
+}
+
+export async function changeRole(username, role) {
+    const user = await User.findOne({ where: { username: username } });
+    if (!user) {
+        throw new Error(`The user ${username} could not be found.`)
+    }
+    if (!Object.values(Role).includes(role)) {
+        throw new Error(`The Role ${role} does not exist.`)
+    }
+    user.update({ role: role })
 }
 
 // Create Hash
@@ -114,7 +145,7 @@ function hash(data) {
 // Helper function to generate a token
 async function generateToken(id) {
     const secret = process.env.PASSWORD_HASH_SECRET;
-    const options = { expiresIn: '1h' };
+    const options = { expiresIn: '10h' };
     const payload = {
         id: id,
     }
@@ -123,10 +154,20 @@ async function generateToken(id) {
 }
 
 // Middleware to redirect
-function redirect(req, res, next) {
+export function redirect(req, res, next) {
     req.redirect = req.query.redirect ?? default_redirect;
     req.redirect_param = `?redirect=${req.redirect}`;
     next();
 };
+
+// validate Role
+export function validateRole(role) {
+    return (req, res, next) => {
+        if (req.user?.role !== role) {
+            throw new Error('Du besitzt nicht die benötigten Rechte um diese Seite zu öffnen.')
+        }
+        next();
+    }
+}
 
 export default auth_router;

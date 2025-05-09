@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Fermantor - Die besten Cocktails in Düren</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <link href="https://fonts.googleapis.com/css?family=Cookie" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+</head>
+
+<body>
+    <!-- partial:index.partial.html -->
+    <div class="wrapper">
+        <%- include('partials/header.ejs', { headerTitle: 'Tristans mega leckere Cocktails' , headerButtons:
+            ['cocktail-create-button', 'bestellung-button' ] }) %>
+
+            <div class="buttons-container">
+                <% for (const data of locals.data) { %>
+                    <a href="#" class="button <%= data === locals.data[0] ? ' button--is-active' : '' %>"
+                        data-target=<%=data.name + '-menu' %>><%= data.name%></a>
+                    <%}%>
+            </div>
+
+            <% for (const data of locals.data) { %>
+                <div class="menu <%= data === locals.data[0] ? ' menu--is-visible' : '' %>" id=<%=data.name + '-menu' %>
+                    >
+                    <% data.items.forEach(element=> { %>
+                        <div class="item">
+                            <div class="item__header">
+                                <form
+                                    action="/cocktails/delete/<%= element.cocktailIdent %><%= locals.config.redirect %>"
+                                    method="post">
+                                    <button
+                                        class="visibility-button <%= locals.config.role === 'ADMIN' ? 'button--is-visible' : '' %>"
+                                        type="submit">x</button>
+                                </form>
+                                <% if (locals.config.role==='USER' ) { %>
+                                    <img class="order-button-icon" cocktailIdent="<%= element.cocktailIdent %>"
+                                        src="icons/add-to-cart.ico"></img>
+                                    <% } %>
+                                        <h3 class="item__title">
+                                            <%= element.cocktailIdent %>
+                                        </h3>
+                                        <span class="item__dots"></span>
+                                        <span class="item__price">
+                                            <%= element.price %>&euro;
+                                        </span>
+                            </div>
+                            <p class="item__description"><i>
+                                    <% element.description.forEach(desc=> { %>
+                                        <%= desc %></br>
+                                            <% }); %>
+                                </i></p>
+                        </div>
+                        <% }); %>
+                </div>
+                <% } %>
+
+    </div> <!-- End Wrapper -->
+    <!-- partial -->
+    <script src="scripts/scripts.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,194 @@
+{
+    "Rum": [
+        {
+            "name": "Fernando Sun",
+            "price": 2,
+            "description": "4cl vanille Rum, 4cl Maracujasaft, 2cl weißer Schokoladensirup, 2cl Limettensaft1BL, Mango Marmelade"
+        },
+        {
+            "name": "Mojito",
+            "price": 2,
+            "description": "4.5cl weißer Rum, 1/2 Limetten, 2 BL brauner Rohrzucker, Minze, Soda (top up)"
+        },
+        {
+            "name": "Pina colada",
+            "price": 2,
+            "description": "4.5cl weißer Rum, 45cl Ananassaft, 3 BL Kokosnuss Cream"
+        },
+        {
+            "name": "Mai Tai",
+            "price": 3,
+            "description": "3cl weißer Rum, 3cl brauner Rum, 1.5cl Triple Sec, 2cl Limettensaft, 0.75cl Zuckersirup, 0.75cl Orgeat"
+        },
+        {
+            "name": "Daiquiri",
+            "price": 2,
+            "description": "6cl weißer Rum, 2cl Limettensaft, 1cl Zuckersirup"
+        },
+        {
+            "name": "Lemon Daiquiri",
+            "price": 2,
+            "description": "3cl weißer Rum, 3cl Triple Sec, 4.5cl Zitronensaft, 1.5cl Zuckersirup"
+        },
+        {
+            "name": "Cuba Libre",
+            "price": 2,
+            "description": "5cl weißer Rum, 1cl Limettensaft, Cola (top up)"
+        },
+        {
+            "name": "Planters Punch",
+            "price": 2,
+            "description": "4.5cl gereifeter Rum, 1.5cl Limettensaft, 3cl Zuckersirup"
+        },
+        {
+            "name": "Jungle Bird",
+            "price": 2,
+            "description": "4.5cl gereifeter Rum, 1.5cl Limettensaft, 12.5cl Zuckersirup, 4.5cl Annanassaft"
+        },
+        {
+            "name": "Rum Sour",
+            "price": 2,
+            "description": "3cl gereifeter Rum, 2.5cl Limettensaft, 2.5cl Orangensaft, 1.25cl Zuckersirup, Eiklar"
+        }
+    ],
+    "Vodka": [
+        {
+            "name": "Caipiroska",
+            "price": 2,
+            "description": "4.5 cl Vodka, 1/2 Limetten, 2 BL brauner Rohrzucker, Soda"
+        },
+        {
+            "name": "Sex on the Beach",
+            "price": 2,
+            "description": "3cl Vodka, 3cl Pfirsichlikör, 4cl Orangensaft, 4cl Cranberrysaft"
+        },
+        {
+            "name": "Vodka Sour",
+            "price": 2,
+            "description": "6cl Vodka, 3cl Zitronensaft, 1.5cl Zuckersirup, ,Angostura Bitters, Eiklar"
+        },
+        {
+            "name": "Bay Breeze",
+            "price": 2,
+            "description": "4cl Vodka, 3cl Annanassaft, Cranberrysaft (top up)"
+        },
+        {
+            "name": "Cape Codder",
+            "price": 2,
+            "description": "6cl Vodka, 0.75cl Limettensaft, Cranberrysaft (top up)"
+        },
+        {
+            "name": "Absolute Hunk",
+            "price": 2,
+            "description": "6cl Vodka, 1.5cl Limettensaft, 0.75 Annanassaft, 1.5cl Sirup"
+        },
+        {
+            "name": "Vodka Tonic",
+            "price": 2,
+            "description": "5cl Vodka, Tonic Water (top up)"
+        }
+    ],
+    "Whiskey": [
+        {
+            "name": "Old Fashioned",
+            "price": 2,
+            "description": "4.5cl Bourbon, 1cl Zuckersirup, 2 Dashes Bitters"
+        },
+        {
+            "name": "Horses Neck",
+            "price": 2,
+            "description": "4.5cl Bourbon, 2 Dashes Bitters, Ginger Ale (top up)"
+        },
+        {
+            "name": "Boulevardier",
+            "price": 2,
+            "description": "4.5cl Bourbon, 3cl Campari, 3cl süßer Wermut"
+        },
+        {
+            "name": "Whiskey Sour",
+            "price": 2,
+            "description": "4.5cl Bourbon, 2.5cl Zitronensaft, 2cl Zuckersirup, 2 Dashes Bitters, Eiklar"
+        },
+        {
+            "name": "Manhatten",
+            "price": 2,
+            "description": "4.5cl Rye Whiskey, 3cl süßer Wermut, 2 Dashes Peychaut Bitters"
+        }
+    ],
+    "Gin": [
+        {
+            "name": "Old Fashioned",
+            "price": 2,
+            "description": "4.5cl Bourbon, 1cl Zuckersirup, 2 Dashes Bitters"
+        },
+        {
+            "name": "Horses Neck",
+            "price": 2,
+            "description": "4.5cl Bourbon, 2 Dashes Bitters, Ginger Ale (top up)"
+        },
+        {
+            "name": "Boulevardier",
+            "price": 2,
+            "description": "4.5cl Bourbon, 3cl Campari, 3cl süßer Wermut"
+        },
+        {
+            "name": "Whiskey Sour",
+            "price": 2,
+            "description": "4.5cl Bourbon, 2.5cl Zitronensaft, 2cl Zuckersirup, 2 Dashes Bitters, Eiklar"
+        },
+        {
+            "name": "Manhatten",
+            "price": 2,
+            "description": "4.5cl Rye Whiskey, 3cl süßer Wermut, 2 Dashes Peychaut Bitters"
+        }
+    ],
+    "Collins": [
+        {
+            "name": "Tom Collins",
+            "price": 2,
+            "description": "4.5cl Gin, 3cl Zitronensaft, 1.5cl Zuckersirup, Soda (top up)"
+        },
+        {
+            "name": "Vodka Collins",
+            "price": 2,
+            "description": "6cl Vodka, 3cl Zitronensaft, 1.5cl Zuckersirup, Soda (top up)"
+        },
+        {
+            "name": "Chicago Fizz",
+            "price": 2,
+            "description": "3cl weißer Rum, 1.5cl Zitronensaft, 0.75cl Zuckersirup, Soda (top up)"
+        },
+        {
+            "name": "Cranberry Collins",
+            "price": 2,
+            "description": "4cl Raspberry Rum, 1.5cl Zitronensaft, 1cl Grenadine, 2.5cl Cranberrysaft, Soda (top up)"
+        },
+        {
+            "name": "Jose Collins",
+            "price": 2,
+            "description": "6cl Teuqila, 2.5cl Zitronensaft, 1.5cl Zuckersirup, Soda (top up)"
+        }
+    ],
+    "Spezial": [
+        {
+            "name": "Negroni",
+            "price": 2,
+            "description": "3cl Gin, 3cl süßer Wermut, 3cl Campari"
+        },
+        {
+            "name": "Campari Spritz",
+            "price": 2,
+            "description": "9 cl Prosecco, 6cl Campari, 3cl Wasser"
+        },
+        {
+            "name": "Long Island Ice Tea",
+            "price": 2,
+            "description": "3cl Zirtronensaft, 2cl Zuckersirup, 1.5cl Gin, 1.5cl Vodka, 1.5cl Triple Sec, 1.5cl Tequila, 1.5cl Rum, Cola (top up)"
+        },
+        {
+            "name": "Tequila Sunrise",
+            "price": 2,
+            "description": "4.5cl Tequila, 9cl Orangensaft, 1.5cl Grenadine"
+        }
+    ]
+}

@@ -56,3 +56,11 @@ body {
 .login-container button:hover {
     background-color: #45a049;
 }
+
+.login-container .cancel-button {
+    background-color: rgb(169, 169, 169);
+}
+
+.login-container .cancel-button:hover {
+    background-color: rgb(147, 147, 147);
+}

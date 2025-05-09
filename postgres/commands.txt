@@ -1,0 +1,26 @@
+# Dump
+docker exec -t postgres_container pg_dump -U admin express_db > dump.sql
+
+# Load
+docker exec -i postgres_container psql -U admin -d express_db < dump.sql
+
+# Create network
+docker network create my_network
+
+# Save image
+docker save -o express.tar express-app:latest
+docker save -o postgres.tar postgres_image:latest
+
+# Transfer image
+scp express.tar root@87.106.208.200:/home
+scp postgres.tar root@87.106.208.200:/home
+
+# Load image
+docker load -i /home/express.tar
+docker load -i /home/postgres.tar
+
+# Run postgres
+docker run -d --name postgres_container --network my_network -e POSTGRES_PASSWORD=$POSTGRES_PASSWORD -p 5432:5432 postgres_image
+
+# Run express
+docker container run -d --name express_container --network my_network -e POSTGRES_PASSWORD=$POSTGRES_PASSWORD -e PASSWORD_HASH_SECRET=$PASSWORD_HASH_SECRET -p 3000:3000 express-app
