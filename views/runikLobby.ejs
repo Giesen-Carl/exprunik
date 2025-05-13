@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Runik Lobby</title>
+    <link rel="stylesheet" href="./../css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/p5@1.11.5/lib/p5.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.11.3/addons/p5.sound.min.js"></script>
+</head>
+
+<body>
+    <div class="wrapper">
+        <%- include('partials/header.ejs', { headerTitle: 'Runik' , headerButtons: ['new-game-button'] } ) %>
+            <table id="open_game_table"></table>
+            <div id="spacer" style="height: 50px; width: auto;"></div>
+            <table id="closed_game_table"></table>
+    </div>
+    <data id="userId" value="<%= locals.userId %>"></data>
+</body>
+
+<script>
+    function loadGames() {
+        fetch('/runik/game')
+            .then(res => res.json())
+            .then(data => {
+                const open_table = document.getElementById('open_game_table');
+                const closed_table = document.getElementById('closed_game_table');
+                const tableHeader = `
+                            <tr>
+                                <th>Player1</th>
+                                <th>Player2</th>
+                                <th>Status</th>
+                                <th>Join</th>
+                            </tr>
+                        `;
+                const openTableRows = data.filter(d => d.isOver === false).reduce((acc, cur) => {
+                    const joinAction = `
+                                <form action="/runik/${cur.gameId}"
+                                    method="get">
+                                    <button type="submit">
+                                        join
+                                    </button>
+                                </form>
+                            `;
+                    const row = `
+                                <tr>
+                                    <td>${cur.player1Name}</td>
+                                    <td>${cur.player2Name ?? '-'}</td>
+                                    <td>${cur.player2Name === undefined ? 'Open' : cur.isOver ? 'Closed' : 'Running'}</td>
+                                    <td>${cur.player2Name === undefined ? '' : joinAction}</td>
+                                </tr>
+                            `;
+                    return acc + row;
+                }, '');
+                const closedTableRows = data.filter(d => d.isOver === true).reduce((acc, cur) => {
+                    const joinAction = `
+                                <form action="/runik/${cur.gameId}"
+                                    method="get">
+                                    <button type="submit">
+                                        join
+                                    </button>
+                                </form>
+                            `;
+                    const row = `
+                                <tr>
+                                    <td>${cur.player1Name}</td>
+                                    <td>${cur.player2Name}</td>
+                                    <td>${cur.isOver ? 'Closed' : 'Open'}</td>
+                                    <td>${joinAction}</td>
+                                </tr>
+                            `;
+                    return acc + row;
+                }, '');
+                open_table.innerHTML = `${tableHeader}${openTableRows}`;
+                closed_table.innerHTML = `${tableHeader}${closedTableRows}`;
+            })
+            .catch(error => console.error('Error fetching data:', error));
+    }
+    setInterval(loadGames, 2000);
+    window.onload = loadGames;
+</script>
+
+<script src="./../scripts/scripts.js"></script>
+
+</html>

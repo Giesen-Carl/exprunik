@@ -89,6 +89,13 @@ setButtonEvent('cocktails-button', () => {
 setButtonEvent('bestellung-button', () => {
     redirect('/bestellung');
 });
+setButtonEvent('new-game-button', () => {
+    fetch('/runik/game', { method: 'post' })
+        .then(a => window.location.reload());
+});
+setButtonEvent('lobby-button', () => {
+    window.location.replace('/runik')
+});
 
 function setButtonEvent(buttonClassName, btnFnc) {
     const button = document.querySelector(`.${buttonClassName}`);

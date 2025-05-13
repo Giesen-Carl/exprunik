@@ -23,19 +23,32 @@
                                     <div>Bestellungen</div>
                                 </button>
                                 <% } %>
-                                    <!-- Header buttons end -->
-                                    <!-- Login and Logout buttons -->
-                                    <button class="header-button logout-button" redirect="/">
-                                        <div class="username-text">
-                                            <%= locals.config.username %>
-                                        </div>
-                                        <div class="logout-text">logout</div>
-                                    </button>
-                                    <% } else { %>
-                                        <button class="header-button login-button" redirect="/">
-                                            <div>login</div>
+                                    <!-- New Game button -->
+                                    <% if (headerButtons.includes('new-game-button')) { %>
+                                        <button class="header-button new-game-button">
+                                            <div>New Game</div>
                                         </button>
                                         <% } %>
-                                            <!-- Login and Logout butons end -->
+
+                                            <!-- Lobby button -->
+                                            <% if (headerButtons.includes('lobby-button')) { %>
+                                                <button class="header-button lobby-button">
+                                                    <div>Lobby</div>
+                                                </button>
+                                                <% } %>
+                                                    <!-- Header buttons end -->
+                                                    <!-- Login and Logout buttons -->
+                                                    <button class="header-button logout-button" redirect="/">
+                                                        <div class="username-text">
+                                                            <%= locals.config.username %>
+                                                        </div>
+                                                        <div class="logout-text">logout</div>
+                                                    </button>
+                                                    <% } else { %>
+                                                        <button class="header-button login-button" redirect="/">
+                                                            <div>login</div>
+                                                        </button>
+                                                        <% } %>
+                                                            <!-- Login and Logout butons end -->
     </div>
 </div>

@@ -8,6 +8,7 @@ import crypto from 'crypto';
 import { Op } from 'sequelize';
 import RunikMove from './database/model/runikMoveModel.js';
 import { validateMoves } from './runik/runik.js';
+import User from './database/model/userModel.js';
 
 const gameRouter = express.Router();
 gameRouter.use(cookieParser());
@@ -17,9 +18,11 @@ gameRouter.use(redirect);
 
 gameRouter.route('/runik')
     .get(auth, validateRole(Role.USER), async (req, res) => {
-        // Send html with game and communication logic
-        await RunikMove.drop()
-        res.send(200);
+        const config = {
+            username: req.user.username,
+            role: req.user.role,
+        };
+        res.render('runikLobby.ejs', { config });
     });
 
 gameRouter.route('/runik/game')
@@ -33,7 +36,19 @@ gameRouter.route('/runik/game')
                 ]
             }
         });
-        res.send(dbGames);
+        const returnGames = await Promise.all(dbGames.map(async g => {
+            const player1Name = (await User.findByPk(g.player1Id)).username;
+            const player2Name = (await User.findByPk(g.player2Id))?.username;
+            return {
+                gameId: g.gameId,
+                player1Id: g.player1Id,
+                player2Id: g.player2Id,
+                isOver: g.isOver,
+                player1Name: player1Name,
+                player2Name: player2Name,
+            }
+        }));
+        res.send(returnGames);
     })
     .post(auth, validateRole(Role.USER), async (req, res) => {
         const userId = req.user.id;
@@ -47,7 +62,7 @@ gameRouter.route('/runik/game')
             await gameToJoin.update({ player2Id: userId });
             gameId = gameToJoin.gameId;
         }
-        res.send(gameId);
+        res.redirect(req.query.redirect)
     });
 
 gameRouter.route('/runik/game/:gameId')
