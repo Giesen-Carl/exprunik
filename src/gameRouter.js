@@ -98,7 +98,11 @@ gameRouter.route('/runik/game/:gameId')
 
 gameRouter.route('/runik/:gameId')
     .get(auth, validateRole(Role.USER), async (req, res) => {
-        res.render('runikGame.ejs', { userId: req.user.id });
+        const config = {
+            username: req.user.username,
+            role: req.user.role,
+        };
+        res.render('runikGame.ejs', { userId: req.user.id, config });
     });
 
 async function initNewGame(player1Id) {

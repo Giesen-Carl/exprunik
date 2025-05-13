@@ -48,7 +48,8 @@ async function setup() {
     globals.HOST = window.location.host;
     globals.GAME_ID = window.location.pathname.split('/')[2];
     globals.USER_ID = document.getElementById('userId').value;
-    createCanvas(game.size, game.size);
+    const canvas = createCanvas(game.size, game.size);
+    canvas.parent('game-root');
     await loadTurnplayerOffset();
     await loadGame();
 }
