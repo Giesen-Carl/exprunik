@@ -6,6 +6,7 @@ import cocktailRouter from './cocktailRouter.js';
 import database from './database/database.js';
 import Cocktail from './database/model/cocktailModel.js';
 import bestellungRouter from './bestellungRouter.js';
+import gameRouter from './gameRouter.js';
 
 
 const app = express();
@@ -16,6 +17,7 @@ app.use(express.static('public'));
 app.use(auth_router);
 app.use(cocktailRouter);
 app.use(bestellungRouter);
+app.use(gameRouter);
 
 app.get('/', authUser, async (req, res) => {
     const cocktails = await Cocktail.findAll();
