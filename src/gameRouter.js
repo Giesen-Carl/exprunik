@@ -17,7 +17,7 @@ gameRouter.use(bodyParser.json());
 gameRouter.use(redirect);
 
 gameRouter.route('/runik')
-    .get(auth, validateRole(Role.USER), async (req, res) => {
+    .get(auth, async (req, res) => {
         const config = {
             username: req.user.username,
             role: req.user.role,
@@ -26,7 +26,7 @@ gameRouter.route('/runik')
     });
 
 gameRouter.route('/runik/game')
-    .get(auth, validateRole(Role.USER), async (req, res) => {
+    .get(auth, async (req, res) => {
         const userId = req.user.id;
         const dbGames = await Runik.findAll({
             where: {
@@ -50,7 +50,7 @@ gameRouter.route('/runik/game')
         }));
         res.send(returnGames);
     })
-    .post(auth, validateRole(Role.USER), async (req, res) => {
+    .post(auth, async (req, res) => {
         const userId = req.user.id;
         const dbGames = await Runik.findAll({ where: { player2Id: null } });
         const joinableGames = dbGames.filter(game => game.player1Id !== userId);
@@ -66,7 +66,7 @@ gameRouter.route('/runik/game')
     });
 
 gameRouter.route('/runik/game/:gameId')
-    .get(auth, validateRole(Role.USER), async (req, res) => {
+    .get(auth, async (req, res) => {
         const gameId = req.params.gameId;
         const game = await Runik.findByPk(gameId);
         if (game === undefined || game === null) {
@@ -85,7 +85,7 @@ gameRouter.route('/runik/game/:gameId')
             }));
         }
     })
-    .post(auth, validateRole(Role.USER), async (req, res) => {
+    .post(auth, async (req, res) => {
         const userId = req.user.id;
         const gameId = req.params.gameId;
         const game = await Runik.findByPk(gameId);
@@ -112,7 +112,7 @@ gameRouter.route('/runik/game/:gameId')
     });
 
 gameRouter.route('/runik/:gameId')
-    .get(auth, validateRole(Role.USER), async (req, res) => {
+    .get(auth, async (req, res) => {
         const config = {
             username: req.user.username,
             role: req.user.role,
