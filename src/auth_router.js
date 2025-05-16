@@ -75,6 +75,25 @@ export const auth = async (req, res, next) => {
     }
 };
 
+// Function to check if user is authenticated in WebSocket
+export const authws = (req, socket, head) => {
+    const token = req.cookies.token;
+    if (!token) {
+        socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
+        socket.destroy();
+        return;
+    }
+    jwt.verify(token, process.env.PASSWORD_HASH_SECRET, async (err, decoded) => {
+        if (err) {
+            socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
+            socket.destroy();
+            return;
+        }
+        const userId = decoded.id;
+        req.user = await User.findByPk(userId);
+    });
+};
+
 export const authUser = async (req, res, next) => {
     const token = req.cookies.token;
     const secret = process.env.PASSWORD_HASH_SECRET;
