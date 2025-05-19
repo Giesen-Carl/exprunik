@@ -30,17 +30,108 @@ const game = {
     moves: [],
     history: [],
     nextMove: undefined,
-    yourTurn: undefined,
+    yourTurn: false,
     isPolling: false,
     isSending: false,
     turnplayerOffset: undefined,
     gameLength: undefined,
+    isOver: false,
 }
 const globals = {
     PROTOCOL: undefined,
     HOST: undefined,
     GAME_ID: undefined,
     USER_ID: undefined,
+}
+const network = {
+    websocket: undefined,
+    isConnected: false,
+    sendingQueue: [],
+    receivingQueue: [],
+}
+function initiateWebsocket() {
+    network.websocket = new WebSocket(`ws://${globals.HOST}/abc`);
+    network.websocket.addEventListener('message', (event => {
+        network.receivingQueue.push(JSON.parse(event.data));
+    }));
+    network.websocket.addEventListener('open', () => {
+        network.isConnected = true;
+        console.log('WebSocket connection established');
+    });
+    network.websocket.addEventListener('close', () => {
+        network.isConnected = false;
+        console.log('WebSocket connection closed');
+    });
+}
+function handleIncomingMessage(message) {
+    // Handle incoming messages from the server
+    const command = message.command;
+    const body = message.body;
+    switch (command) {
+        case 'GAMESTATE': {
+            const moves = body.moves;
+            game.turnplayer = game.players[moves.length % 2];
+            game.yourTurn = body.yourTurn;
+            game.field = getFieldFromMoves(moves);
+            game.moves = generateMoves(game.field, game.turnplayer.id);
+            for (const player of game.players) {
+                if (generateMoves(game.field, player.id).length === 0) {
+                    player.hasLost = true;
+                }
+            }
+            break;
+        }
+        case 'MOVE': {
+            const move = body.move;
+            const foundMove = game.moves.find(m =>
+                m.sourcePos.x === move.sourcex &&
+                m.sourcePos.y === move.sourcey &&
+                m.targetPos.x === move.targetx &&
+                m.targetPos.y === move.targety &&
+                m.after.rune === move.rune
+            );
+            doMove(game.field, foundMove);
+            game.turnplayer = game.players.find(player => player.id !== game.turnplayer.id);
+            game.yourTurn = !game.yourTurn;
+            game.moves = generateMoves(game.field, game.turnplayer.id);
+            if (body.isGameOver) {
+                game.isOver = true;
+                for (const player of game.players) {
+                    if (generateMoves(game.field, player.id).length === 0) {
+                        player.hasLost = true;
+                    }
+                }
+            }
+            break;
+        }
+    }
+}
+function pushMessage(command, body) {
+    const message = {
+        command: command,
+        body: body,
+    };
+    network.sendingQueue.push(message);
+}
+function handleSendingQueue() {
+    if (!network.isConnected || network.websocket.readyState !== WebSocket.OPEN) {
+        return;
+    }
+    for (const message of network.sendingQueue) {
+        console.log('Sending message:', message);
+        network.websocket.send(JSON.stringify(message));
+    }
+    network.sendingQueue = [];
+}
+function handleReceivingQueue() {
+    if (!network.isConnected) {
+        return;
+    }
+    for (const message of network.receivingQueue) {
+        console.log('Received message:', message);
+        handleIncomingMessage(message);
+    }
+    network.receivingQueue = [];
 }
 
 async function setup() {
@@ -50,8 +141,11 @@ async function setup() {
     globals.USER_ID = document.getElementById('userId').value;
     const canvas = createCanvas(game.size, game.size);
     canvas.parent('game-root');
-    await loadTurnplayerOffset();
-    await loadGame();
+    initiateWebsocket();
+    pushMessage('GAMESTATE', {
+        gameId: globals.GAME_ID,
+        userId: globals.USER_ID,
+    });
 }
 
 async function loadGame() {
@@ -113,32 +207,22 @@ function getFieldFromMoves(moves) {
     for (const move of moves) {
         const player = move.index % 2;
         const availableMoves = generateMoves(field, player);
-        const foundMove = findMove(availableMoves, move);
+        const foundMove = availableMoves.find(m =>
+            m.sourcePos.x === move.sourcex &&
+            m.sourcePos.y === move.sourcey &&
+            m.targetPos.x === move.targetx &&
+            m.targetPos.y === move.targety &&
+            m.after.rune === move.rune
+        );
         doMove(field, foundMove);
     }
     return field;
 }
 
-function findMove(moves, move) {
-    return moves.find(m =>
-        m.sourcePos.x === move.sourcex &&
-        m.sourcePos.y === move.sourcey &&
-        m.targetPos.x === move.targetx &&
-        m.targetPos.y === move.targety &&
-        m.after.rune === move.rune
-    )
-}
-
 async function draw() {
-    background(220);
-    if (game.players.every(p => !p.hasLost)) {
-        if (game.yourTurn) {
-            handleInput();
-            await handleUpdate();
-        } else if (!game.isPolling) {
-            await poll();
-        }
-    }
+    handleSendingQueue();
+    handleReceivingQueue();
+    handleInput();
     handleRender();
 }
 
@@ -155,7 +239,7 @@ function handleInput() {
             return;
         }
         game.mouseDown = true;
-        if (mouseButton === 'left') {
+        if (!game.isOver && game.yourTurn && mouseButton === 'left') {
             const mousePos = getInboundMouse();
             // Click rune field
             if (!isEmpty(game.field, mousePos)) {
@@ -178,7 +262,18 @@ function handleInput() {
                     : [];
             if (moveOptions.length > 0) {
                 const move = moveOptions[game.selection.optionsIndex % moveOptions.length];
-                game.nextMove = move;
+                pushMessage('MOVE', {
+                    gameId: globals.GAME_ID,
+                    userId: globals.USER_ID,
+                    move: {
+                        sourcex: move.sourcePos.x,
+                        sourcey: move.sourcePos.y,
+                        targetx: move.targetPos.x,
+                        targety: move.targetPos.y,
+                        rune: move.after.rune,
+                    }
+                });
+                game.selection.active = false;
             }
         }
     } else {
@@ -188,23 +283,23 @@ function handleInput() {
 
 async function handleUpdate() {
     const move = game.nextMove;
-    if (move && !game.isSending) {
-        game.isSending = true;
-        const res = await sendMove(move);
-        if (!res) {
-            return;
-        }
-        doMove(game.field, move);
-        game.history.push(move);
-        // Confirm move
+    if (move) {
+        const message = {
+            command: 'MOVE',
+            body: {
+                gameId: globals.GAME_ID,
+                userId: globals.USER_ID,
+                move: {
+                    sourcex: move.sourcePos.x,
+                    sourcey: move.sourcePos.y,
+                    targetx: move.targetPos.x,
+                    targety: move.targetPos.y,
+                    rune: move.after.rune,
+                }
+            }
+        };
+        pushMessage(message.command, message.body);
         game.nextMove = undefined;
-        game.selection.active = false;
-        game.selection.pos.x = -1;
-        game.selection.pos.y = -1;
-        game.turnplayer = game.players.find(player => player.id !== game.turnplayer.id);
-        game.moves = generateMoves(game.field, game.turnplayer.id);
-        await loadGame();
-        game.isSending = false;
     }
 }
 

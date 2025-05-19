@@ -9,6 +9,7 @@ import { Op } from 'sequelize';
 import RunikMove from './database/model/runikMoveModel.js';
 import { validateMoves } from './runik/runik.js';
 import User from './database/model/userModel.js';
+import jwt from 'jsonwebtoken';
 
 const gameRouter = express.Router();
 gameRouter.use(cookieParser());
@@ -64,6 +65,72 @@ gameRouter.route('/runik/game')
         }
         res.redirect(req.query.redirect)
     });
+
+export const mountRouter = () => {
+    gameRouter.ws('/abc', (ws, req) => {
+        console.log('WebSocket connection established');
+        registerClient(req, ws);
+        ws.on('message', async (msg) => {
+            await handleIncomingMessage(ws, msg)
+        });
+    });
+}
+
+const gameSessions = {};
+function registerClient(gameId, ws) {
+    if (gameSessions[gameId] === undefined) {
+        gameSessions[gameId] = [];
+    }
+    gameSessions[gameId].push(ws);
+    console.log('👤 A user connected. Total:', gameSessions[gameId].length);
+}
+async function handleIncomingMessage(ws, msg) {
+    const message = JSON.parse(msg);
+    const command = message.command;
+    const body = message.body;
+    switch (command) {
+        case 'GAMESTATE': {
+            const gameId = body.gameId;
+            const userId = body.userId;
+            const game = await Runik.findByPk(gameId);
+            if (game === undefined || game === null) {
+                return;
+            }
+            const moves = await RunikMove.findAll({ where: { gameId: gameId } })
+            const turnplayer = moves.length % 2 === 0 ? game.player1Id : game.player2Id;
+            ws.send(JSON.stringify({ command: 'GAMESTATE', body: { moves: moves, yourTurn: turnplayer === userId } }));
+            registerClient(gameId, ws);
+            break;
+        }
+        case 'MOVE': {
+            const gameId = body.gameId;
+            const userId = body.userId;
+            const game = await Runik.findByPk(gameId);
+            if (game === undefined || game === null) {
+                return;
+            }
+            const move = {
+                sourcex: body.move.sourcex,
+                sourcey: body.move.sourcey,
+                targetx: body.move.targetx,
+                targety: body.move.targety,
+                rune: body.move.rune,
+            }
+            const validation = await validateMove(game, userId, move);
+            if (validation.valid === false) {
+                return;
+            }
+            await addMove(game, move);
+            if (validation.isGameOver) {
+                await game.update({ isOver: true });
+            }
+            gameSessions[gameId].forEach(ws =>
+                ws.send(JSON.stringify({ command: 'MOVE', body: { move: move, isGameOver: validation.isGameOver } }))
+            );
+        }
+            break;
+    }
+}
 
 gameRouter.route('/runik/game/:gameId')
     .get(auth, async (req, res) => {
