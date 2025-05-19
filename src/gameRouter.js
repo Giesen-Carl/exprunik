@@ -53,6 +53,7 @@ gameRouter.route('/runik/game')
     })
     .post(auth, async (req, res) => {
         const userId = req.user.id;
+        const updateUserLobbies = [userId]
         const dbGames = await Runik.findAll({ where: { player2Id: null } });
         const joinableGames = dbGames.filter(game => game.player1Id !== userId);
         let gameId;
@@ -60,30 +61,87 @@ gameRouter.route('/runik/game')
             gameId = await initNewGame(userId)
         } else {
             const gameToJoin = joinableGames[0];
+            updateUserLobbies.push(gameToJoin.player1Id);
             await gameToJoin.update({ player2Id: userId });
             gameId = gameToJoin.gameId;
         }
-        res.redirect(req.query.redirect)
+        for (const lobby of lobbySession) {
+            if (updateUserLobbies.includes(lobby.userId)) {
+                const returnGames = await findGamesByUserId(lobby.userId);
+                lobby.ws.send(JSON.stringify(returnGames));
+            }
+        }
     });
 
 export const mountRouter = () => {
-    gameRouter.ws('/abc', (ws, req) => {
-        console.log('WebSocket connection established');
-        registerClient(req, ws);
+    gameRouter.ws('/runik/game/ws', (ws, req) => {
+        const userId = getUserIdFromRequest(req);
+        console.log(` ==> WebSocket connection established with ${userId} <==`);
         ws.on('message', async (msg) => {
             await handleIncomingMessage(ws, msg)
         });
     });
+    gameRouter.ws('/runik/lobby/ws', async (ws, req) => {
+        const userId = getUserIdFromRequest(req);
+        console.log('WebSocket connection established');
+        registerLobbyClient(userId, ws);
+        const returnGames = await findGamesByUserId(userId);
+        ws.send(JSON.stringify(returnGames));
+    });
+}
+async function findGamesByUserId(userId) {
+    const dbGames = await Runik.findAll({
+        where: {
+            [Op.or]: [
+                { player1Id: userId },
+                { player2Id: userId },
+            ]
+        }
+    });
+    const returnGames = await Promise.all(dbGames.map(async g => {
+        const player1Name = (await User.findByPk(g.player1Id)).username;
+        const player2Name = (await User.findByPk(g.player2Id))?.username;
+        return {
+            gameId: g.gameId,
+            player1Id: g.player1Id,
+            player2Id: g.player2Id,
+            isOver: g.isOver,
+            player1Name: player1Name,
+            player2Name: player2Name,
+        }
+    }));
+    return returnGames;
 }
 
-const gameSessions = {};
-function registerClient(gameId, ws) {
-    if (gameSessions[gameId] === undefined) {
-        gameSessions[gameId] = [];
-    }
-    gameSessions[gameId].push(ws);
-    console.log('👤 A user connected. Total:', gameSessions[gameId].length);
+const lobbySession = [];
+function registerLobbyClient(userId, ws) {
+    lobbySession.push({
+        userId: userId,
+        ws: ws
+    });
+    ws.on('close', () => {
+        lobbySession.splice(lobbySession.findIndex(session => session.userId === userId), 1);
+    });
+    console.log('👤 A user connected to Lobby. Total:', lobbySession.length);
 }
+
+const gameSessions = [];
+function registerGameClient(gameId, userId, ws) {
+    gameSessions.push({
+        gameId: gameId,
+        userId: userId,
+        ws: ws
+    });
+    ws.on('close', () => {
+        gameSessions.splice(gameSessions.findIndex(session => session.gameId === gameId && session.userId === userId), 1);
+    });
+    console.log('👤 A user connected to Game. Total:', gameSessions.length);
+}
+function getUserIdFromRequest(req) {
+    const token = req.cookies.token;
+    return token ? jwt.verify(token, process.env.PASSWORD_HASH_SECRET).id : null;
+}
+
 async function handleIncomingMessage(ws, msg) {
     const message = JSON.parse(msg);
     const command = message.command;
@@ -99,7 +157,7 @@ async function handleIncomingMessage(ws, msg) {
             const moves = await RunikMove.findAll({ where: { gameId: gameId } })
             const turnplayer = moves.length % 2 === 0 ? game.player1Id : game.player2Id;
             ws.send(JSON.stringify({ command: 'GAMESTATE', body: { moves: moves, yourTurn: turnplayer === userId } }));
-            registerClient(gameId, ws);
+            registerGameClient(gameId, userId, ws);
             break;
         }
         case 'MOVE': {

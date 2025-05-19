@@ -50,7 +50,7 @@ const network = {
     receivingQueue: [],
 }
 function initiateWebsocket() {
-    network.websocket = new WebSocket(`ws://${globals.HOST}/abc`);
+    network.websocket = new WebSocket(`ws://${globals.HOST}/runik/game/ws`);
     network.websocket.addEventListener('message', (event => {
         network.receivingQueue.push(JSON.parse(event.data));
     }));
