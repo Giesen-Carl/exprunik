@@ -20,32 +20,31 @@
     <!-- partial -->
     <script src="scripts/scripts.js"></script>
     <script>
-        function pollData() {
-            fetch('/bestellungen')
-                .then(response => response.json())
-                .then(data => {
-                    const element = document.getElementById('bestellungen_table');
-                    if ("<%= locals.config.role %>" === 'USER') {
-                        const tableHeader = `
+        const ws = new WebSocket(`ws://${window.location.host}/bestellung/ws`);
+        ws.addEventListener('message', event => renderData(JSON.parse(event.data)));
+        function renderData(data) {
+            const element = document.getElementById('bestellungen_table');
+            if ("<%= locals.config.role %>" === 'USER') {
+                const tableHeader = `
                             <tr>
                                 <th>Time</th>
                                 <th>Cocktail</th>
                                 <th>Status</th>
                             </tr>
                         `;
-                        const tableRows = data.reduce((acc, cur) => {
-                            const row = `
+                const tableRows = data.reduce((acc, cur) => {
+                    const row = `
                             <tr>
                                 <td>${cur.time}</td>
                                 <td>${cur.cocktailIdent}</td>
                                 <td>${cur.status}</td>
                             </tr>
                         `;
-                            return acc + row;
-                        }, '');
-                        element.innerHTML = `${tableHeader}${tableRows}`;
-                    } else if ("<%= locals.config.role %>" === 'ADMIN') {
-                        const tableHeader = `
+                    return acc + row;
+                }, '');
+                element.innerHTML = `${tableHeader}${tableRows}`;
+            } else if ("<%= locals.config.role %>" === 'ADMIN') {
+                const tableHeader = `
                             <tr>
                                 <th>Time</th>
                                 <th>Username</th>
@@ -54,25 +53,15 @@
                                 <th>Action</th>
                             </tr>
                         `;
-                        const tableRows = data.reduce((acc, cur) => {
-                            const completeAction = `
-                                <form action="/bestellung/complete/${cur.id}?redirect=/bestellung"
-                                    method="post">
-                                    <button type="submit">
-                                        complete
-                                    </button>
-                                </form>
+                const tableRows = data.reduce((acc, cur) => {
+                    const completeAction = `
+                                <button type="submit" onClick="sendPost('/bestellung/complete/${cur.id}')">complete</button>
                             `;
-                            const deleteAction = `
-                                <form action="/bestellung/delete/${cur.id}?redirect=/bestellung"
-                                    method="post">
-                                    <button type="submit">
-                                        delete
-                                    </button>
-                                </form>
+                    const deleteAction = `
+                                <button type="submit" onClick="sendPost('/bestellung/delete/${cur.id}')">delete</button>
                             `;
-                            const actions = cur.status === 'IN_PROGRESS' ? completeAction : deleteAction;
-                            const row = `
+                    const actions = cur.status === 'IN_PROGRESS' ? completeAction : deleteAction;
+                    const row = `
                                 <tr>
                                     <td>${cur.time}</td>
                                     <td>${cur.username}</td>
@@ -81,15 +70,14 @@
                                     <td>${actions}</td>
                                 </tr>
                             `;
-                            return acc + row;
-                        }, '');
-                        element.innerHTML = `${tableHeader}${tableRows}`;
-                    }
-                })
-                .catch(error => console.error('Error fetching data:', error));
+                    return acc + row;
+                }, '');
+                element.innerHTML = `${tableHeader}${tableRows}`;
+            }
         }
-        setInterval(pollData, 2000);
-        window.onload = pollData;
+        function sendPost(url) {
+            fetch(url, { method: 'POST' });
+        }
     </script>
 </body>
 

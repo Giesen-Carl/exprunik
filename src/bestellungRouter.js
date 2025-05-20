@@ -6,6 +6,7 @@ import User from './database/model/userModel.js';
 import Cocktail from './database/model/cocktailModel.js';
 import bodyParser from 'body-parser';
 import { redirect } from './auth_router.js';
+import jwt from 'jsonwebtoken';
 
 const BestellStatus = {
     IN_PROGRESS: 'IN_PROGRESS',
@@ -65,6 +66,70 @@ bestellungRouter.get(
         res.json(bestellungen);
     });
 
+const bestellungSession = [];
+function registerBestellungClient(user, ws) {
+    bestellungSession.push({
+        userId: user.id,
+        ws: ws
+    });
+    ws.on('close', () => {
+        bestellungSession.splice(bestellungSession.findIndex(session => session.userId === user.id), 1);
+    });
+    console.log('👤 A user connected to Bestellung. Total:', bestellungSession.length);
+}
+function getUserIdFromRequest(req) {
+    const token = req.cookies.token;
+    return token ? jwt.verify(token, process.env.PASSWORD_HASH_SECRET).id : null;
+}
+async function findBestellungenByUser(user) {
+    let bestellungenDB;
+    if (user.role === Role.USER) {
+        bestellungenDB = await Bestellung.findAll({ where: { username: user.username } });
+    } else if (user.role === Role.ADMIN) {
+        bestellungenDB = await Bestellung.findAll();
+    }
+    let bestellungen;
+    if (bestellungenDB !== undefined) {
+        bestellungen = await Promise.all(bestellungenDB.map(b => {
+            const timeString = dateFormat.format(new Date(b.createdAt)).replace(',', '');
+            return {
+                time: timeString,
+                username: b.username,
+                cocktailIdent: b.cocktailIdent,
+                status: b.status,
+                id: b.id
+            }
+        }));
+    }
+    return bestellungen;
+}
+
+export const mountBestellungRouter = () => {
+    bestellungRouter.ws('/bestellung/ws', async (ws, req) => {
+        const userId = getUserIdFromRequest(req);
+        const user = await User.findByPk(userId);
+        if (!user) {
+            ws.close();
+            return;
+        }
+        console.log('WebSocket connection established');
+        registerBestellungClient(user, ws);
+        const bestellungen = await findBestellungenByUser(user);
+        ws.send(JSON.stringify(bestellungen));
+    });
+};
+
+async function sendBestellungUpdateToClients(userId) {
+    const notifyIds = [...(await User.findAll({ where: { role: Role.ADMIN } })).map(user => user.id), userId];
+    for (const session of bestellungSession) {
+        if (notifyIds.includes(session.userId)) {
+            const user = await User.findByPk(session.userId);
+            const bestellungen = await findBestellungenByUser(user);
+            session.ws.send(JSON.stringify(bestellungen));
+        }
+    }
+}
+
 bestellungRouter.post(
     '/bestellung/:cocktailIdent',
     authUser,
@@ -72,10 +137,11 @@ bestellungRouter.post(
     async (req, res) => {
         try {
             await bestellungHinzufuegen(req.params.cocktailIdent, req.user.username)
+            await sendBestellungUpdateToClients(req.user.id);
         } catch (error) {
             console.log(error)
         }
-        res.status(200);
+        res.sendStatus(200);
     });
 bestellungRouter.post(
     '/bestellung/delete/:id',
@@ -84,9 +150,12 @@ bestellungRouter.post(
     async (req, res) => {
         try {
             const params = req.params;
+            const username = (await Bestellung.findByPk(params.id)).username;
+            const user = await User.findOne({ where: { username: username } });
             await bestellungEntfernen(params.id);
+            await sendBestellungUpdateToClients(user.id);
         } catch (error) {}
-        res.redirect(req.query.redirect)
+        res.sendStatus(200);
     });
 bestellungRouter.post(
     '/bestellung/complete/:id',
@@ -95,9 +164,12 @@ bestellungRouter.post(
     async (req, res) => {
         try {
             const params = req.params;
+            const username = (await Bestellung.findByPk(params.id)).username;
+            const user = await User.findOne({ where: { username: username } });
             await bestellungAbschliessen(params.id);
+            await sendBestellungUpdateToClients(user.id);
         } catch (error) {}
-        res.redirect(req.query.redirect)
+        res.sendStatus(200);
     });
 
 async function bestellungHinzufuegen(cocktailIdent, username) {

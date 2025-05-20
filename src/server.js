@@ -7,6 +7,7 @@ import database from './database/database.js';
 import Cocktail from './database/model/cocktailModel.js';
 import bestellungRouter from './bestellungRouter.js';
 import gameRouter, { mountRouter } from './gameRouter.js';
+import { mountBestellungRouter } from './bestellungRouter.js';
 import expressWs from 'express-ws';
 import jwt from 'jsonwebtoken';
 
@@ -15,6 +16,7 @@ const app = express();
 const httpServer = http.createServer(app);
 expressWs(app, httpServer);
 mountRouter();
+mountBestellungRouter();
 
 app.set('view engine', 'ejs');
 app.use(express.static('public'));
