@@ -16,7 +16,7 @@
     "docker:build": "docker build -t express-app .",
     "test": "dotenv -e .env -- echo $REMOTE_ROOT",
     "docker:build-postgres": "docker build -t postgres_image ./postgres",
-    "deploy": "docker build -t express-app . & docker save -o tar/express.tar express-app:latest & scp tar/express.tar root@87.106.208.200:/home/tar/ & ssh root@87.106.208.200 \"/home/load_express.sh\""
+    "deploy": "docker build -t express-app . & docker save -o tar/express.tar express-app:latest & scp tar/express.tar root@87.106.208.200:/home/tar/ & ssh root@87.106.208.200 \"/home/scripts/load_express.sh\" & ssh root@87.106.208.200 \"/home/scripts/run_express.sh\""
   },
   "author": "ME",
   "license": "UNLICENSED",
