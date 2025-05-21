@@ -182,9 +182,11 @@ async function handleIncomingMessage(ws, msg) {
             if (validation.isGameOver) {
                 await game.update({ isOver: true });
             }
-            gameSessions[gameId].forEach(ws =>
-                ws.send(JSON.stringify({ command: 'MOVE', body: { move: move, isGameOver: validation.isGameOver } }))
-            );
+            if (gameSessions[gameId] !== undefined) {
+                gameSessions[gameId].forEach(ws =>
+                    ws.send(JSON.stringify({ command: 'MOVE', body: { move: move, isGameOver: validation.isGameOver } }))
+                );
+            }
         }
             break;
     }
