@@ -21,7 +21,8 @@
 </body>
 
 <script>
-    const ws = new WebSocket(`ws://${window.location.host}/runik/lobby/ws`);
+    const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+    const ws = new WebSocket(`${protocol}://${window.location.host}/runik/lobby/ws`);
     ws.addEventListener('message', event => renderData(JSON.parse(event.data)));
     function renderData(data) {
         const open_table = document.getElementById('open_game_table');

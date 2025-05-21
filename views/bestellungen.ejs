@@ -20,7 +20,8 @@
     <!-- partial -->
     <script src="scripts/scripts.js"></script>
     <script>
-        const ws = new WebSocket(`ws://${window.location.host}/bestellung/ws`);
+        const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+        const ws = new WebSocket(`${protocol}://${window.location.host}/bestellung/ws`);
         ws.addEventListener('message', event => renderData(JSON.parse(event.data)));
         function renderData(data) {
             const element = document.getElementById('bestellungen_table');
