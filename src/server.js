@@ -7,6 +7,7 @@ import database from './database/database.js';
 import Cocktail from './database/model/cocktailModel.js';
 import bestellungRouter from './bestellungRouter.js';
 import gameRouter, { mountRouter } from './gameRouter.js';
+import golRouter, { mountGolRouter } from './golRouter.js';
 import { mountBestellungRouter } from './bestellungRouter.js';
 import expressWs from 'express-ws';
 import jwt from 'jsonwebtoken';
@@ -17,6 +18,7 @@ const httpServer = http.createServer(app);
 expressWs(app, httpServer);
 mountRouter();
 mountBestellungRouter();
+mountGolRouter();
 
 app.set('view engine', 'ejs');
 app.use(express.static('public'));
@@ -24,6 +26,7 @@ app.use(auth_router);
 app.use(cocktailRouter);
 app.use(bestellungRouter);
 app.use(gameRouter);
+app.use(golRouter);
 
 app.get('/', authUser, async (req, res) => {
     const cocktails = await Cocktail.findAll();

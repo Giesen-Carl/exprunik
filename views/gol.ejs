@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <script src="https://cdn.jsdelivr.net/npm/p5@1.11.5/lib/p5.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.11.3/addons/p5.sound.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="css/style.css">
+    <meta charset="utf-8" />
+
+</head>
+
+<body>
+    <data id="userId" value="<%= locals.userId %>"></data>
+    <div id="input-row">
+        <div>
+            <input type="number" id="xPos">
+            <label for="grid">x</label>
+        </div>
+        <div>
+            <input type="number" id="yPos">
+            <label for="grid">y</label>
+        </div>
+        <div>
+            <input type="number" id="width">
+            <label for="grid">Width</label>
+        </div>
+        <div>
+            <input type="number" id="height">
+            <label for="grid">Height</label>
+        </div>
+        <div>
+            <input type="number" id="zoom">
+            <label for="grid">Zoom</label>
+        </div>
+    </div>
+    <script src="scripts/gol.js"></script>
+</body>
+
+</html>
